@@ -15,3 +15,20 @@ https://www.cs.cornell.edu/~caruana/ctp/ct.papers/caruana.icml06.pdf
 
 Boosted Decision Trees basic explanation:
 https://indico.fnal.gov/event/15356/contribution/1/material/slides/0.pdf
+
+Why doesn't Random Forest handle missing values in predictors?
+Gradient Boosting Trees uses CART trees (in a standard setup, as it was proposed by its authors). 
+CART trees are also used in Random Forests. What @user777 said is true, 
+that RF trees handles missing values either by imputation with average, either by rough average/mode, 
+either by an averaging/mode based on proximities. These methods were proposed by Breiman and Cutler and are used for RF. 
+This is a reference from authors Missing values in training set.
+However, one can build a GBM or RF with other type of decision trees. The usual replacement for CART is C4.5 proposed by Quinlan. 
+In C4.5 the missing values are not replaced on data set. 
+Instead, the impurity function computed takes into account the missing values by penalizing the impurity score with the ration of missing values.
+On test set the evaluation in a node which has a test with missing value, 
+the prediction is built for each child node and aggregated later (by weighting).
+Now, in many implementations C4.5 is used instead of CART.
+The main reason is to avoid expensive computation (CART has more rigorous statistical approaches, which require more computation), 
+the results seems to be similar, the resulted trees are often smaller (since CART is binary and C4.5 not). 
+I know that Weka uses this approach. I do not know other libraries, but I expect it to not be a singular situation. 
+This would be an answer.
