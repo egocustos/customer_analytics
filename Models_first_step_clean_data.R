@@ -51,7 +51,7 @@ library(randomForest)
 set.seed(123)
 classifier_rf = randomForest(x = training_set_rf[-187],
                              y = training_set_rf$Churn,
-                             ntree = 100)
+                             ntree = 200)
 
 classif_rf<-train(Churn~., data = training_set_rf, method = "ranger", importance = TRUE)
 
@@ -62,8 +62,8 @@ y_pred_rf = predict(classifier_rf, newdata = test_set_rf[,-187])
 
 # Making the Confusion Matrix
 cm_rf = table(test_set_rf[, 187], y_pred_rf)
-# True Negatives clean data: 11,306/12,216 (92.55%)
-# True Positives clean data: 8/284 (2.82%)
+# True Negatives clean data: 11,307/12,212 (92.59%)
+# True Positives clean data: 13/288 (4.51%)
 
 library(plyr)
 count(y_pred_rf)
