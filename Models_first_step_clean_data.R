@@ -62,8 +62,8 @@ y_pred_rf = predict(classifier_rf, newdata = test_set_rf[,-187])
 
 # Making the Confusion Matrix
 cm_rf = table(test_set_rf[, 187], y_pred_rf)
-# True Negatives clean data: 11306/11582 (9.88%)
-# True Positives clean data: 822/918 (93.9%)
+# True Negatives clean data: 11,306/12,216 (92.55%)
+# True Positives clean data: 8/284 (2.82%)
 
 library(plyr)
 count(y_pred_rf)
