@@ -35,14 +35,49 @@ NoManyCat <- function(dat) {
   unlist(want)
 }
 
+train_categoric_many_levels <- subset(train_categoric, select = NoManyCat(train_categoric))
+summary(train_categoric_many_levels$Var197)
+hist(train_categoric_many_levels$Var192)
+
+library(plyr)
+freq_df <- count(train_categoric_many_levels, 'Var197')
+muestra <- train_categoric_many_levels$Var197
+muestra <- ddply(as.data.frame(muestra), .(muestra), nrow)
+muestra$muestra <- with(muestra, reorder(muestra, -V1))
+
+p <- ggplot(muestra, aes(x=muestra, y=V1)) + geom_bar(stat="identity")
+print(p)
+df<-colnames(freq_df$Var197)
+ggplot(data=freq_df, aes(x=reorder(new,-freq), y=freq)) + 
+  geom_bar(stat="identity", position="dodge") +
+  theme(axis.text.x=element_text(size=1))
+  #theme_grey(base_size = 4)
+muestra$`train_categoric_many_levels$Var197` <- with(muestra, reorder(train_categoric_many_levels$Var197, -V1))
+orden <- names(sort(train_categoric_many_levels$Var197), decreasing=TRUE)
+
+library(dplyr)
+add_column(freq_df, new = 1:226)
+freq_df<-mutate(freq_df, new = 1:226)
+library(ggplot2)
+# counts
+ggplot(train_categoric_many_levels, aes(x=reorder(Var197,y=..count..))) +
+  geom_bar()
+
+library(dplyr)
+library(magrittr)
+train_categoric_many_levels$Var197 %>% 
+  #group_by(Var197) %>% 
+  filter(n()>500)
+
+
 train_categoric_rf <- subset(train_categoric, select = -NoManyCat(train_categoric))
 train_rf <- cbind(train_numeric, train_categoric_rf, Churn)
 
 library(caTools)
-set.seed(123)
-split <- sample.split(train_rf$Churn, SplitRatio = 0.75)
-training_set_rf <- subset(train_rf, split == TRUE)
-test_set_rf <- subset(train_rf, split == FALSE)
+set.seed(321)
+split_rf <- sample.split(train_rf$Churn, SplitRatio = 0.75)
+training_set_rf <- subset(train_rf, split_rf == TRUE)
+test_set_rf <- subset(train_rf, split_rf == FALSE)
 
 
 # Fitting Random Forest Classification to the Training set
@@ -62,11 +97,13 @@ y_pred_rf = predict(classifier_rf, newdata = test_set_rf[,-187])
 
 # Making the Confusion Matrix
 cm_rf = table(test_set_rf[, 187], y_pred_rf)
-# True Negatives clean data: 11,307/12,212 (92.59%)
-# True Positives clean data: 13/288 (4.51%)
+# True Negatives clean data: 11,306/12,216 (92.55%)
+# True Positives clean data: 8/284 (2.82%)
 
 library(plyr)
 count(y_pred_rf)
+
+summary(train_categoric_many_levels$Var197)
 
 
 library(caret) 
