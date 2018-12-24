@@ -1,0 +1,20 @@
+Functions Script:
+
+1.-NA Remover
+2.-No SD Remover
+3.-CategoryToOther
+4.-Binary Encoding
+5.-OneHot Encoding
+6.-Missing Value Replacement (Mean, "Missing")
+7.-PCA
+8.-MCA
+9.-HC
+10.-K-means
+11.-Correlation Filter
+12.-Mice (Num, Cat)
+13.-Sampling
+14.-VarImp
+15.-Parallel Processing *
+
+
+
