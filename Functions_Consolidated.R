@@ -17,6 +17,15 @@ SDremover <- function(data,perc) {
   return(data[,ind])
 }
 
+ #JC Function for 1 and 2 together
+ NoVar <- function(dat) {
+  out <- lapply(dat, function(x) length(unique(x)))
+  want <- which(!out > 1)
+  unlist(want)
+}
+#df <- subset(df, select = -NoVar(df))
+
+              
 # Function 3: CategoryToOther-------------------------------------------------------------
 
 #Function taking a column and replacing all categories with a Frequency less than
