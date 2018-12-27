@@ -1,0 +1,38 @@
+labels <- read.table("labels.csv",sep=",",header=T)
+
+pcafunction <- function(data,labels,npc) {
+  #1.-selecting numerical variables
+  data$churn<-cbind(labels$Churn)
+  indexes <- unlist(lapply(data, is.numeric))
+  numericas<-data[ , indexes]
+  
+  #--preprocesing with functions
+  ##2.-preprocessing with functions
+  numericas2<-NULLremover(0.99,numericas) #numericas2 es variables numericas sin las que tienen mas del 99% de NAs
+  
+  #3.- Easy replace by mean
+  
+  numericas3<-BasicReplace(numericas2[,1:168]) #numericas3 remplaza na por mean
+  numericas3$churn<-cbind(numericas2$churn)
+  #4. Sampling to create training and test
+  
+  set.seed(1)
+  samp <- sample(nrow(numericas3), nrow(numericas3)*0.8)
+  numericas3.train <- numericas3[samp,]
+  numericas3.test <- numericas3[-samp,]
+  train.churn<-data.frame(numericas3[samp,]$churn)
+  test.churn<-data.frame(numericas3[-samp,]$churn)
+  numericas3.train$churn<-NULL
+  numericas3.test$churn<-NULL
+  #5. Applying PCA
+  pca <- prcomp(numericas3.train, retx=TRUE, center=TRUE, scale=TRUE)
+  test.data <- predict(pca, newdata=numericas3.test)
+  train.data <- data.frame(pca$x)
+  train.data<-train.data[,1:npc]
+  test.data<-data.frame(test.data)
+  test.data<-test.data[,1:npc]
+  return(list(test.data,train.data,test.churn,train.churn))  
+}  
+  
+principal_components<-pcafunction(data,labels,30)
+View(principal_components)
