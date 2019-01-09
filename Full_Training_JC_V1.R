@@ -1,3 +1,9 @@
+#Techniques -> NoFullNA, NoZeroVar, DownSampling, Mice Imputation on numericals,
+#             Chi-Square (or copies) for categorical vars, Mice inputation on categoricals, 
+#             CorrMatrix on numericals, BinaryEncoder, CorrMatrix on dummies, 
+#             Modelling Functions (trainControl, expand.grid(), train, predict, roc, auc)
+
+
 #Importing the dataset
 library(readr)
 orange_train<-read.csv("ORANGE_TRAIN_DATA.csv")
@@ -22,84 +28,145 @@ Orange_DS <- subset(Orange_DS, select = -NoVar(Orange_DS))
 library("dplyr")
 Orange_numeric_DS <- select_if(Orange_DS, is.numeric)
 
+Orange_numeric_DS_with_NAs <- select_if(Orange_DS, is.numeric)
+corrmatrix_with_NAs <-cor(Orange_numeric_DS_with_NAs,use="pairwise.complete.obs")
+CorrMatrix_with_NAs <- round(corrmatrix_with_NAs, 2)
+for(i in 1:ncol(CorrMatrix_with_NAs)){
+  CorrMatrix_with_NAs[is.na(CorrMatrix_with_NAs[,i]), i] <- 0
+}
+highlyCorrelated_with_NAs <- findCorrelation(CorrMatrix_with_NAs, cutoff=0.99, names = F)
+Orange_numeric_DS <- Orange_numeric_DS_with_NAs[,-c(highlyCorrelated_with_NAs)]
+
 for(i in 1:ncol(Orange_numeric_DS)){
   Orange_numeric_DS[is.na(Orange_numeric_DS[,i]), i] <- mean(Orange_numeric_DS[,i], na.rm = TRUE)
 }
 
 Orange_numeric_DS <- subset(Orange_numeric_DS, select = -NoVar(Orange_numeric_DS))
 
-# ensure the results are repeatable
-set.seed(7)
-
-# load the library
-library(mlbench)
-library(caret)
-
-# calculate correlation matrix
-correlationMatrix <- cor(Orange_numeric_DS)
-anyNA(correlationMatrix)
-
-CorrMatrix <- round(correlationMatrix, 2)
-#View(CorrMatrix)
-
-# find attributes that are highly corrected (ideally >0.75, but requested 0.9)
-highlyCorrelated <- findCorrelation(CorrMatrix, cutoff=0.99, names = F)
-
-Orange_numeric_DS <- Orange_numeric_DS[,-c(highlyCorrelated)]
-
 Orange_numeric_DS <- subset(Orange_DS, select=names(Orange_numeric_DS))
-#anyNA(Orange_numeric_DS) #shall be TRUE
 
 library(mice)
 library(parallel)
 library(tictoc)
 
-tic('Using parlMICE:')
+#sort(colSums(is.na(Orange_DS[,1:174])> 0), decreasing = T)
+#sort(colSums(is.na(Orange_numeric_DS)> 0), decreasing = T)
 
-imp <- parlmice(Orange_numeric_DS, method = 'rf' ,seed = 31, n.core = 7, n.imp.core = 2) #Error in serialize(data, node$con) : error writing to connection
+tic('Using parlMICE on numerical features without correlation:')
+
+imp <- parlmice(Orange_numeric_DS, method = 'rf' ,seed = 31, n.core = 3, n.imp.core = 1) #Error in serialize(data, node$con) : error writing to connection
 
 Orange_numeric_DS_parl <- complete(imp)  # generate the completed data.
+toc()
+
 anyNA(Orange_numeric_DS_parl)
+#Only if anyNA is false:
+Orange_numeric_DS <- Orange_numeric_DS_parl
+
+
+#Mice on categoricals
+Orange_Cat_DS <- select_if(Orange_DS[,-ncol(Orange_DS)],is.factor)
+
+tic('Using parlMICE on categorical:')
+
+imp_c <- parlmice(Orange_Cat_DS, method = 'rf' ,seed = 31, n.core = 3, n.imp.core = 1) #Error in serialize(data, node$con) : error writing to connection
+
+Orange_Cat_DS_parl <- complete(imp_c)  # generate the completed data.
+Orange_Cat_DS <- Orange_Cat_DS_parl
 
 toc()
 
+binaryEncoding <- function(col) {
+  if(is.factor(col)) {
+    col_num <- col %>% as.numeric() %>% intToBits() %>% 
+      as.integer() %>% matrix(ncol=length(col)) %>% t() %>% data.frame() 
+    ind <- col_num %>% apply(2,function(x) all(x==0)) %>% {which(.==FALSE)} %>% 
+      max()
+    return(col_num[,1:ind])
+  }
+  else return(col)
+}
+#for applying this to a dataframe df call
+Orange_Cat_DS <- Orange_Cat_DS %>% lapply(function(x) x <- binaryEncoding(x)) %>% data.frame()
 
-names(head(sort(colSums(is.na(Orange_numeric_DS_parl)> 0), decreasing = T)))
+Class <- Orange_DS$Class
+Orange_DS_Final <-cbind(Orange_numeric_DS, Orange_Cat_DS, Class)
 
-which(names(Orange_DS)=="Var90")
-# Var118  Var29  Var66  Var90 Var156 Var105  Var71  Var91  Var88 Var128 
-# 7321    7249   7249   7249   7249   7243   7222   7222   7218   7218 
-#Var2 Var122  Var27 Var138   
-#7201   7201   7175   7154 
+# Performing the splitting to the rough dataset-------------------------------------------------------------
 
-Orange_DS[,c(107,213)]
+# Splitting the dataset into the Training set and Test set
 
-#NoVar (just 1 value) 
-boxplot(Orange_DS$Var118) # 0 and 3
-boxplot(Orange_DS$Var29) #Var29: 0
-boxplot(Orange_DS$Var90) # 0
-boxplot(Orange_DS$Var2) # 0
-boxplot(Orange_DS[,127])
+library(caTools)
+set.seed(31)
+split = sample.split(Orange_DS_Final$Class, SplitRatio = 0.75)
+training_set = subset(Orange_DS_Final, split == TRUE)
+test_set = subset(Orange_DS_Final, split == FALSE)
 
-sum(is.na(Orange_DS$col))
+# Random Forest -----------------------------------------------------------
 
-#Just 1 value (no churn)
-boxplot(Orange_DS[,111]) 
-boxplot(Orange_DS[,24])
+# Fitting Random Forest Classification to the Training set
+# install.packages('randomForest')
+library(randomForest)
+set.seed(31)
+classifier_rf = randomForest(x = training_set[,-ncol(training_set)],
+                             y = training_set$Class,
+                             ntree = 500)
 
-#Cases of stduy (all have multiples values)
-boxplot(Orange_DS$Var66) #
-boxplot(Orange_DS$Var156)#
-boxplot(Orange_DS[,94]) #
-boxplot(Orange_DS[,61]) #
-boxplot(Orange_DS[,80]) #
-boxplot(Orange_DS[,77]) #
-boxplot(Orange_DS[,117]) #
+# Predicting the Test set results
+y_pred_rf = predict(classifier_rf, newdata = test_set[,-ncol(training_set)])
 
+# Making the Confusion Matrix
+cm_rf = table(test_set[, ncol(training_set)], y_pred_rf)
 
+# 10 trees
+#   y_pred_rf
+#    0   1
+#  0 562 356
+#  1 428 490
+# True Negatives: 562/918 (61.22%)
+# True Positives: 490/918 (53.38%)
+# Accuracy: 1052/1836 (57.3%)
 
-Orange_DS_NA_cols <- sapply(Orange_numeric_DS_parl, function(x) sum(is.na(x))) 
-df <- subset(Orange_numeric_DS_parl, select = -names(Orange_DS_NA_cols[Orange_DS_NA_cols>0]))
+# 100 trees
+#   y_pred_rf
+#    0   1
+#  0 584 334
+#  1 366 552
+# True Negatives: 584/918 (63.62%)
+# True Positives: 552/918 (60.13%)
+# Accuracy: 1144/1836 (62.31%)
 
+# 500 trees
+#   y_pred_rf
+#    0   1
+#  0 585 333
+#  1 359 559
+# True Negatives: 585/918 (63.73%)
+# True Positives: 559/918 (60.89%)
+# Accuracy: 1144/1836 (62.31%)
 
+# Using Caret's train function -----------------------------------------------------------
+
+set.seed(321)
+fitControl <- trainControl(method = "CV",
+                           number = 3,
+                           verboseIter = TRUE,
+                           classProbs= TRUE,
+                           summaryFunction = twoClassSummary)
+
+#Random forest
+
+rf_grid <- expand.grid(mtry=80,splitrule="gini",min.node.size=seq(10,100,10))
+
+rf <- train(x=training_set[,-ncol(training_set)], 
+            y=make.names(training_set$Class), 
+            method="ranger", metric="ROC",num.trees=500,
+            trControl=fitControl,tuneGrid=rf_grid)
+rf_pred <- predict(rf,test_set[,-ncol(test_set)],type="prob")
+table(rf_pred$X1>0.5,test_set$Class)
+
+#Calculating the AUC
+library(pROC)
+roc_obj <- roc(test_set$Class, rf_pred$X1)
+auc(roc_obj) #Area under the curve: 0.687
 
