@@ -1,0 +1,27 @@
+﻿
+1.- It's impossible to interpret Random Forest models
+	A.- True
+	B.- False
+
+2.- The Python class for Random Forests is:
+	A.- RandomF
+	B.- Random.Forest
+	C.- RF
+	D.- random_forests
+	E.- RandomForestClassifier
+
+3.- In Random Forests, the output  will always be:
+	A.- A Decision Tree that wins the majority vote
+	B.- An optimized set of "n" decision trees following a specific criterion
+	C.- A random set of "n" decision trees
+
+4.- A Random Forest model will always be better or equal (in performance) with the use of more trees, under the same settings
+	A.- True
+	B.- False
+
+5.- Which option contains correct parameters for a randomForest function in R?
+	A.- criterion, ntree
+	B.- importance, mtry, criterion, ntree
+	C.- importance, mtry, ntree, na.action
+	D.- All of the above
+	E.- None of the Above

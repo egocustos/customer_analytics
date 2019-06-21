@@ -1,0 +1,27 @@
+﻿﻿Decision Trees Quiz
+
+1.- Can we use Decision Trees for Regression?
+	A.- Yes
+	B.- No
+ 
+2.- What is the Python class for fitting a Decision Tree model?
+	A.- DecisionTree
+	B.- DecisionTreeClassifier
+	C.- dt	
+
+3.- Decision Trees are Case-IF statements
+	A.- True
+	B.- False
+
+4.- What is the R function for modelling a Decision Tree used as example during the lectures
+	A.- Train
+	B.- Caret
+	C.- DecisionTree
+	D.- rpart
+	E.- glm	
+	
+5.- What is the criterion for Decision Trees splitting rules that could easily lead to overfitting
+	A.- IG
+	B.- Gini Index
+	C.- Entropy
+	D.- Classification Error
