@@ -1,0 +1,11 @@
+Hello!
+Thank you for your interest in the Census Data API. 
+Your API key is 325e06a902ccfb12667187e01ebc067f92ae3437. 
+
+Please click here to activate your key. 
+Save this email for future reference.
+Have Fun,
+The Census Bureau API Team
+Follow @uscensusbureau on twitter for API updates.
+
+
